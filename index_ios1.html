@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Realidad Aumentada con Gato, Panda y Coca</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    #errorMessage {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #f44336;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="errorMessage"></div>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
+  <a-scene
+    vr-mode-ui="enabled: false"
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <a-marker
+      type="pattern"
+      url="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/patt_desierto.patt?v=1748950711742"
+    >
+      <a-entity
+        gltf-model="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/un_gato_astronauta__0530122935_texture.glb?v=1748942167509"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000"
+      ></a-entity>
+    </a-marker>
+    <a-marker
+      type="pattern"
+      url="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/pattern-suelo_madera.patt?v=1748953371615"
+    >
+      <a-entity
+        gltf-model="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/Panda_0603122526_texture.glb?v=1748953548426"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000"
+      ></a-entity>
+    </a-marker>
+    <a-marker
+      type="pattern"
+      url="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/suelo_coca.patt?v=1749033392280"
+    >
+      <a-entity
+        gltf-model="https://cdn.glitch.global/4e98cf00-21d0-49a5-aa41-a71550588749/coca_redondela.glb?v=1749033361193"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 5000"
+      ></a-entity>
+    </a-marker>
+    <a-entity camera="near: 0.1; far: 1000;"></a-entity>
+  </a-scene>
+  <script>
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => { errorDiv.style.display = 'none'; }, 5000);
+    }
+    window.onload = () => {
+      if (!window.WebGLRenderingContext) {
+        showError('WebGL no está soportado. Usa un navegador compatible como Chrome o Firefox.');
+      }
+    };
+  </script>
+</body>
+</html>
